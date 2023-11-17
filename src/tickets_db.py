@@ -8,7 +8,7 @@ env = dotenv_values(".env")
 DB_PATH = env["DB_PATH"]
 
 
-class CollectionOperator():
+class TicketsDB():
     def __init__(self, collection_name, db_path = DB_PATH, embedder: BaseEmbedder = None):
         self.embedder = embedder
         self.client = chromadb.PersistentClient(path = db_path)

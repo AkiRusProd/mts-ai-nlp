@@ -1,25 +1,44 @@
 import re
 import nltk
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
+
 from nltk import ne_chunk, pos_tag, word_tokenize
 from nltk.tree import Tree
 
-
+from datetime import datetime
 from dateutil.parser import parse
-from ner import BERTNER
+from bert_ner import BERTNER
 from functools import wraps
 from termcolor import colored
 
-def extract_date(text):
+nltk.download('punkt') if not nltk.data.find('tokenizers/punkt') else None
+nltk.download('averaged_perceptron_tagger') if not nltk.data.find('taggers/averaged_perceptron_tagger') else None
+nltk.download('maxent_ne_chunker') if not nltk.data.find('chunkers/maxent_ne_chunker') else None
+nltk.download('words') if not nltk.data.find('corpora/words') else None
+
+def extract_date(text, valid_dates):
     try:
         dt = parse(text, fuzzy=True)
-        return dt
+        
+        if str(dt) in valid_dates:
+            return str(dt)
+        
+        return None
     except ValueError:
         return None
 
+
+
+def extract_birth_date(text):
+    try:
+        dt = parse(text, fuzzy=True)
+        if (datetime.now() - dt).days >= 18 * 365:  # check if the date is at least 18 years old
+            return str(dt)
+        else:
+            return None
+    except ValueError:
+        return None
+
+# print(extract_birthday("1358"))
 # text = "I have a meeting on 30/03/2023 at 10:30"
 # date = extract_date(text)
 # print(date)
@@ -30,27 +49,6 @@ def extract_email(text):
     matches = re.findall(email_regex, text)
     return matches[0] if matches else None
 
-# text = "My email addresses are example@example.com and another_example@domain.com"
-# emails = extract_emails(text)
-# print(emails)
-
-# import spacy
-
-# def extract_names(text):
-#     nlp = spacy.load("en_core_web_sm")
-#     doc = nlp(text)
-#     names = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
-#     return names
-
-# text = "John and Valentin are going to the park. They will meet with Michael there."
-# names = extract_names(text)
-# print(names)
-
-
-# text = '''
-# This is a sample text that contains the name Akimov Rustam who is one of the developers of this project.
-# You can also find the surname Jones here.
-# '''
 
 def extract_name(text):
     nltk_results = ne_chunk(pos_tag(word_tokenize(text)))
@@ -80,18 +78,23 @@ def extract_numbers(text):
 # numbers = extract_numbers(text)
 # print(numbers)  # Вывод: 1234567890
 
-male_synonyms = ["male", "man", "guy", "gentleman", "he-man", "masculine", "manful", "manlike", "virile", "androcentric", "androcratic", "androgenous", "staminate", "anthropoidal"]
-female_synonyms = ["female", "woman", "lady", "ladylike", "she-woman", "feminine", "womanful", "womanlike", "girl", "dame", "feminine", "distaff", "heroine", "broad" ]
-classes_of_service = ["economy", "business", "first"]
+
+
+
 cities = ["Volgograd", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan", "Chelyabinsk", "Rostov", "Ufa", "Krasnoyarsk", "Perm"]
 
 def extract_classes_of_service(text):
+    classes_of_service = ["economy", "business", "first"]
+
     if any(word in text.lower() for word in classes_of_service):
         return next(service for service in classes_of_service if service in text.lower())
     else:
         return None
 
 def extract_gender(text):
+    male_synonyms = ["male", "man", "guy", "gentleman", "he-man", "masculine", "manful", "manlike", "virile", "androcentric", "androcratic", "androgenous", "staminate", "anthropoidal"]
+    female_synonyms = ["female", "woman", "lady", "ladylike", "she-woman", "feminine", "womanful", "womanlike", "girl", "dame", "feminine", "distaff", "heroine", "broad" ]
+
     if any(word in text.lower() for word in male_synonyms):
         return "male"
     elif any(word in text.lower() for word in female_synonyms):
@@ -99,7 +102,7 @@ def extract_gender(text):
     else:
         return None
 
-def extract_city(text):
+def extract_city(text, cities):
     for city in cities:
         if city in text:
             return city
@@ -130,6 +133,15 @@ def bert_extract_name(text):
 
 
 # print(bert_extract_name("John and Valentin are going to the park. They will meet with Rustam Akimov there."))
+
+def extract_value(text, values):
+    if not values or not text:
+        return None
+
+    for price in values:
+        if str(price) in text:
+            return price
+    return None
 
 
 def logging(enabled = True, message = "", color = "yellow"):

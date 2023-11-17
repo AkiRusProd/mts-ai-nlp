@@ -1,6 +1,7 @@
 from llm import LlamaCPPLLM
 from embedder import HFEmbedder
-from query_db import CollectionOperator
+from tickets_db import TicketsDB
+from flights_db import FlightsDB
 from dotenv import dotenv_values
 
 env = dotenv_values(".env")
@@ -12,7 +13,7 @@ def chat():
     while True:
         user_text_request = input("You > ")
 
-        bot_text_response = llm_agent.response(user_text_request)
+        bot_text_response = llm_agent.generate(user_text_request)
         
         if llm_agent.streaming:
             print(f"Bot <", end = ' ')
@@ -24,16 +25,13 @@ def chat():
 
 
 if __name__ == "__main__":
-
-    
     embedder = HFEmbedder()
 
-    tickets_db_operator = CollectionOperator("total-memory", embedder = embedder)
+    tickets_db = TicketsDB("total-memory", embedder = embedder)
+    flights_db = FlightsDB("flights.csv")
     
-    llm_agent = LlamaCPPLLM(env['LLM_PATH'], tickets_db_operator)
+    llm_agent = LlamaCPPLLM(env['LLM_PATH'], tickets_db, flights_db)
     llm_agent.user = "### Instructions" #"USER", ### Human
     llm_agent.assistant = "### Response" #"ASSISTANT"
-
-    # llm_agent = LLMAgent(llm, total_memory_co)
 
     chat()
