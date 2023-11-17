@@ -12,10 +12,10 @@ class FlightsDB:
         if os.path.exists(self.filename):
             self.flights = pd.read_csv(self.filename)
         else:
-            self.flights = pd.DataFrame(columns=['city_name', 'departure_date', 'arrival_date', 'price'])
+            self.flights = pd.DataFrame(columns=['city_name', 'departure_date', 'arrival_date', 'seat_place', 'price'])
 
-    def add_flight(self, city_name, departure_date, arrival_date, price):
-        flight_data = pd.DataFrame({'city_name': [city_name], 'departure_date': [departure_date], 'arrival_date': [arrival_date], 'price': [price]})
+    def add_flight(self, city_name, departure_date, arrival_date, seat_place, price):
+        flight_data = pd.DataFrame({'city_name': [city_name], 'departure_date': [departure_date], 'arrival_date': [arrival_date], 'seat_place': [seat_place], 'price': [price]})
         self.flights = pd.concat([self.flights, flight_data], ignore_index=True)
         self.flights.to_csv(self.filename, index=False)
 

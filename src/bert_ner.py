@@ -2,13 +2,14 @@ import os
 import torch
 
 from transformers import AutoTokenizer, AutoModelForTokenClassification
-from transformers import logging
 from transformers import pipeline
 from dotenv import dotenv_values
+from transformers import logging
+logging.set_verbosity_error()
 
 env = dotenv_values(".env")
 os.environ['HUGGINGFACE_HUB_CACHE'] = env['HUGGINGFACE_HUB_CACHE']
-logging.set_verbosity_warning()
+
 
 class BERTNER():
     def __init__(self, model = "dslim/bert-large-NER"):

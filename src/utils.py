@@ -38,8 +38,8 @@ def extract_numbers(text):
     # Ищем группу из 4 цифр, возможно разделенных пробелами, затем ищем 6 цифр
     match = re.search(r'(\d\s*\d\s*\d\s*\d)\s*(\d{6})', text)
     if match:
-        # Удаляем пробелы и объединяем числа
-        numbers = ''.join(match.group(1).split()) + match.group(2)
+        # Удаляем пробелы из первой группы и объединяем числа с пробелом между группами
+        numbers = ''.join(match.group(1).split()) + ' ' + match.group(2)
         return numbers
     else:
         return None

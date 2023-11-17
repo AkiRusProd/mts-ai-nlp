@@ -35,8 +35,8 @@ class LlamaCPPLLM():
         self.db_n_results = 1
 
         self.system_contexts = {
-            "init": "<<SYS>>Keep in mind!, you are in the role of an airline ticket seller. Stick to your role! Prompt the user to book a ticket or inquire about their bookings. Make sure to mention the two options: [BUY] to purchase a ticket, and [SHOW] to view ticket details. The user must use these terms in the chat!<</SYS>>",
-            "buy": "<<SYS>>Remember, you are in the role of an airline ticket seller. Stick to your role! The user has booked a ticket. Wish the user a happy flight; be sure to ask this question!<</SYS>>",
+            "init": "<<SYS>>Keep in mind!, you are in the role of an airline ticket seller. Stick to your role!  It seems that the user did not indicate his choise (BUY or SHOW). Prompt the user to book a ticket or inquire about their bookings. Make sure to mention the two options: [BUY] to purchase a ticket, and [SHOW] to view ticket details. The user must use these terms in the chat!<</SYS>>",
+            "buy": "<<SYS>>Remember, you are in the role of an airline ticket seller. Stick to your role! The user {user_name} has booked a ticket with departure date {departure_date}, arrival date {arrival_date} and seat_place {seat_place}. The price is {price}. Wish the user a happy flight; be sure to ask this question!<</SYS>>",
             "user_name": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his name. Ask the user to specify his name. You must not deviate from your role; be sure to ask this question!<</SYS>>",
             "gender": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his gender. Ask the user to specify his gender (Male or Female). You must not deviate from your role; be sure to ask this question!<</SYS>>",
             "birth_date": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his birth date. Ask the user to specify his birth date. He should use the format DD-MM-YYYY. You must not deviate from your role; be sure to ask this question!<</SYS>>",
@@ -44,8 +44,8 @@ class LlamaCPPLLM():
             "document_number": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his document number. Ask the user to specify his document number (10 digits). You must not deviate from your role; be sure to ask this question!<</SYS>>",
             "city_name": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his city or city is not in the accepted cities list. Accepted cities are {cities}: Ask the user to specify the name of the city he wish to fly to. You must not deviate from your role; be sure to ask this question!<</SYS>>",
             "class_of_service": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his class of service. Ask the user which class of service does he prefer? He can choose between economy class, business class and first class. You must not deviate from your role; be sure to ask this question!<</SYS>>",
-            "show_ticket": "<<SYS>>You should show the ticket as json object in tickets infos that the user has purchased. Do not text any other information, just show ticket as json object in memory chunks provided. You must not deviate from your role!<</SYS>>",
-            "ticket_id": "<<SYS>>Remember, you are in the role of an airline ticket seller. The user has a choice of several tickets. The ticket ids are {ticket_ids}. You must not deviate from your role!<</SYS>>",
+            "show_ticket": "<<SYS>>You should show the ticket as json object fully in tickets infos that the user has purchased. Do not text any other information, just show ticket as json object provided. You must not deviate from your role!<</SYS>>",
+            "ticket_id": "<<SYS>>Remember, you are in the role of an airline ticket seller. The user has a choice of several tickets. It seems that the user did not indicate his id or id is not in the accepted ids. Accepted ticket ids are {ticket_ids}. Say user he should choose a ticket by its id. Don't come up with anything that isn't listed in SYS!!! You must not deviate from your role!<</SYS>>",
         }
 
         self.ticket_info = {
@@ -53,6 +53,7 @@ class LlamaCPPLLM():
             "ticket_id": None,
             "departure_date": None,
             "arrival_date": None,
+            "seat_place": None,
             "price": None,
             "class_of_service": None,
             "user_name": None,
@@ -86,10 +87,10 @@ class LlamaCPPLLM():
     def print_flights(self):
         flights = self.flights_db.get_flights(self.ticket_info['city_name'])
         table = PrettyTable()
-        table.field_names = [colored("ID", 'blue'), colored("City Name", 'blue'), colored("Departure Date", 'blue'), colored("Arrival Date", 'blue'), colored("Price", 'blue')]
+        table.field_names = [colored("ID", 'blue'), colored("City Name", 'blue'), colored("Departure Date", 'blue'), colored("Arrival Date", 'blue'), colored("Seat Place", 'blue'), colored("Price", 'blue')]
 
         for id, flight in flights.iterrows():
-            table.add_row([colored(id, 'magenta'), colored(flight['city_name'], 'green'), colored(flight['departure_date'], 'yellow'), colored(flight['arrival_date'], 'yellow'), colored(flight['price'], 'red')])
+            table.add_row([colored(id, 'magenta'), colored(flight['city_name'], 'green'), colored(flight['departure_date'], 'yellow'), colored(flight['arrival_date'], 'yellow'), colored(flight['seat_place'], 'cyan'), colored(flight['price'], 'red')])
 
         print(table)
 
@@ -121,6 +122,7 @@ class LlamaCPPLLM():
             self.ticket_info["departure_date"] = self.flights_db.get_ticket(ticket_id)["departure_date"]
             self.ticket_info["arrival_date"] = self.flights_db.get_ticket(ticket_id)["arrival_date"]
             self.ticket_info["price"] = self.flights_db.get_ticket(ticket_id)["price"]
+            self.ticket_info["seat_place"] = self.flights_db.get_ticket(ticket_id)["seat_place"]
         elif self.ticket_info["birth_date"] is None and birth_date is not None:
             self.ticket_info["birth_date"] = birth_date
         if self.ticket_info["class_of_service"] is None and class_of_service is not None:
@@ -139,7 +141,7 @@ class LlamaCPPLLM():
         self.print_ticket_info
         
         for key, value in self.ticket_info.items():
-            if key in ["departure_date", "arrival_date", "price"]:
+            if key in ["departure_date", "arrival_date", "seat_place", "price"]:
                 continue
 
             if value is None:
@@ -153,11 +155,12 @@ class LlamaCPPLLM():
             
                 return self.response(f"{system_context}\n{self.user}:\n{request}\n{self.assistant}:\n", streaming = self.streaming)
 
+        system_context = self.system_contexts["buy"].format(user_name = self.ticket_info["user_name"], departure_date = self.ticket_info["departure_date"], arrival_date = self.ticket_info["arrival_date"], seat_place = self.ticket_info["seat_place"], price = self.ticket_info["price"])
         self.add_ticket_to_db
         self.clear_ticket_info
         self.current_response = None
 
-        return self.response(f"{self.system_contexts['buy']}{self.user}:\n{request}\n{self.assistant}:\n", streaming = self.streaming)
+        return self.response(f"{system_context}{self.user}:\n{request}\n{self.assistant}:\n", streaming = self.streaming)
 
     def generate(self, request: str) -> Any:
        
