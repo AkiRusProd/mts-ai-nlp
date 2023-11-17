@@ -19,10 +19,13 @@ def extract_date(text, valid_dates):
         return None
 
 def extract_birth_date(text):
+    if not re.search(r'\b(\d{4}[-./]\d{1,2}[-./]\d{1,2}|\d{1,2}[-./]\d{1,2}[-./]\d{4})\b', text):
+        return None
+
     try:
         dt = parse(text, fuzzy=True)
         if (datetime.now() - dt).days >= 18 * 365:
-            return str(dt)
+            return str(dt.date())
         else:
             return None
     except ValueError:
@@ -38,7 +41,6 @@ def extract_numbers(text):
     # Ищем группу из 4 цифр, возможно разделенных пробелами, затем ищем 6 цифр
     match = re.search(r'(\d\s*\d\s*\d\s*\d)\s*(\d{6})', text)
     if match:
-        # Удаляем пробелы из первой группы и объединяем числа с пробелом между группами
         numbers = ''.join(match.group(1).split()) + ' ' + match.group(2)
         return numbers
     else:

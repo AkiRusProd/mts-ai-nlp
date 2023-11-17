@@ -7,7 +7,7 @@ from dotenv import dotenv_values
 env = dotenv_values(".env")
 
 
-def chat():
+def chat() -> None:
     llm_agent.streaming = True
 
     while True:
