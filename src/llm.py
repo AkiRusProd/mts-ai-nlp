@@ -123,7 +123,7 @@ class LlamaCPPLLM():
             self.ticket_info["arrival_date"] = self.flights_db.get_ticket(ticket_id)["arrival_date"]
             self.ticket_info["price"] = self.flights_db.get_ticket(ticket_id)["price"]
             self.ticket_info["seat_place"] = self.flights_db.get_ticket(ticket_id)["seat_place"]
-        elif self.ticket_info["birth_date"] is None and birth_date is not None:
+        if self.ticket_info["birth_date"] is None and birth_date is not None:
             self.ticket_info["birth_date"] = birth_date
         if self.ticket_info["class_of_service"] is None and class_of_service is not None:
             self.ticket_info["class_of_service"] = class_of_service

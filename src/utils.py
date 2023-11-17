@@ -96,7 +96,7 @@ def extract_value(text, values):
         return None
 
     for price in values:
-        if str(price) in text:
+        if re.search(r'(?:^|\s)' + re.escape(str(price)) + r'(?:\s|$)', text):
             return price
     return None
 
