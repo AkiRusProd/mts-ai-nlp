@@ -1,3 +1,4 @@
+import ast
 from prettytable import PrettyTable
 from termcolor import colored
 from typing import List, Optional, Any
@@ -44,7 +45,7 @@ class LlamaCPPLLM():
             "document_number": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his document number. Ask the user to specify his document number (10 digits). You must not deviate from your role; be sure to ask this question!<</SYS>>",
             "city_name": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his city or city is not in the accepted cities list. Accepted cities are {cities}: Ask the user to specify the name of the city he wish to fly to. You must not deviate from your role; be sure to ask this question!<</SYS>>",
             "class_of_service": "<<SYS>>Keep in mind! You are in the role of an airline ticket seller. It seems that the user did not indicate his class of service. Ask the user which class of service does he prefer? He can choose between economy class, business class and first class. You must not deviate from your role; be sure to ask this question!<</SYS>>",
-            "show_ticket": "<<SYS>>You should show the ticket as json object fully in tickets infos that the user has purchased. Do not text any other information, just show ticket as json object provided. You must not deviate from your role!<</SYS>>",
+            "show_ticket": "<<SYS>>You should extract base information from the flight ticket in provided TICKET_INFO ant tell the summary of the ticket. Just one sentence about the ticket. Please don't write anything else<</SYS>>",
             "ticket_id": "<<SYS>>Remember, you are in the role of an airline ticket seller. The user has a choice of several tickets. It seems that the user did not indicate his id or id is not in the accepted ids. Accepted ticket ids are {ticket_ids}. Say user he should choose a ticket by its id. Don't come up with anything that isn't listed in SYS!!! You must not deviate from your role!<</SYS>>",
         }
 
@@ -73,12 +74,12 @@ class LlamaCPPLLM():
             self.ticket_info[key] = None
 
     
-    @property
     @logging(enable_logging, message="[Printing ticket info]")
-    def print_ticket_info(self):
+    def print_ticket_info(self, ticket_info = None):
+        ticket_info = self.ticket_info if ticket_info is None else ticket_info
         table = PrettyTable()
         table.field_names = [colored("Ticket Info", 'blue'), colored("Value", 'blue')]
-        for key, value in self.ticket_info.items():
+        for key, value in ticket_info.items():
             table.add_row([colored(key, 'green'), colored(value, "yellow" if value else "red")])
         print(table)
 
@@ -138,7 +139,7 @@ class LlamaCPPLLM():
     def add_ticket_response(self, request: str) -> Any:
         self.extract_contexts(request)
 
-        self.print_ticket_info
+        self.print_ticket_info()
         
         for key, value in self.ticket_info.items():
             if key in ["departure_date", "arrival_date", "seat_place", "price"]:
@@ -186,7 +187,8 @@ class LlamaCPPLLM():
             queries = f"{self.system_contexts['show_ticket']}{self.user}:\n{request}\n{self.input}:\n"
 
             for i, query in enumerate(memory_queries):
-                queries += f"Ticket info {i}: {query}\n"
+                queries += f"TICKET_INFO {i}: {query}\n"
+                self.print_ticket_info(ast.literal_eval(query))
 
             queries += f"{self.assistant}:\n"
 
