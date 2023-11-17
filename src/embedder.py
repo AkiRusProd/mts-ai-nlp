@@ -4,7 +4,6 @@ import os
 import numpy as np
 from transformers import AutoModel, AutoTokenizer
 from chromadb import EmbeddingFunction
-from gpt4all import Embed4All
 from dotenv import dotenv_values
 
 env = dotenv_values(".env")

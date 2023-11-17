@@ -2,7 +2,6 @@ import pandas as pd
 import os
 from dotenv import dotenv_values
 
-# from utils import extract_price
 
 env = dotenv_values(".env")
 DB_PATH = env["DB_PATH"]
@@ -50,26 +49,3 @@ class FlightsDB:
             return self.flights.iloc[ticket_id]
         else:
             return None
-
-
-from dateutil.parser import parse
-db = FlightsDB('flights.csv')
-def extract_price(text, prices):
-    for price in prices:
-        if str(price) in text:
-            return price
-    return None
-print(db.get_prices("Perm", "2023-07-03 18:00:00"))
-print(extract_price("i take 1358", db.get_prices("Perm", "2023-07-03 18:00:00")))
-
-# def extract_date(text, valid_dates):
-#     try:
-#         dt = parse(text, fuzzy=True)
-#         if str(dt) in valid_dates:
-#             return str(dt)
-            
-#         return None
-#     except ValueError:
-#         return None
-
-# print(extract_date("I want to go to Moscow on 2023-07-03 18pm", db.get_departure_dates("Perm")))
