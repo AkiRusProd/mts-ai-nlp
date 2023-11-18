@@ -130,46 +130,31 @@ class LlamaCPPLLM:
         )
 
     def extract_contexts(self, request: str) -> Any:
-        city_name = extract_city(request, self.flights_db.get_cities())
-        gender = extract_gender(request)
-        class_of_service = extract_classes_of_service(request)
-        birth_date = extract_birth_date(request)
-        ticket_id = extract_value(
-            request, self.flights_db.get_ticket_ids(self.ticket_info["city_name"])
-        )
-        email = extract_email(request)
-        name = extract_name(request)
-        numbers = extract_numbers(request)
+        extraction_mapping = {
+            "city_name": (extract_city, [request, self.flights_db.get_cities()]),
+            "gender": (extract_gender, [request]),
+            "class_of_service": (extract_classes_of_service, [request]),
+            "birth_date": (extract_birth_date, [request]),
+            "ticket_id": (extract_value, [request, self.flights_db.get_ticket_ids(self.ticket_info["city_name"])]),
+            "email": (extract_email, [request]),
+            "user_name": (extract_name, [request]),
+            "document_number": (extract_numbers, [request])
+        }
 
-        if self.ticket_info["city_name"] is None and city_name is not None:
-            self.ticket_info["city_name"] = city_name
-        if self.ticket_info["gender"] is None and gender is not None:
-            self.ticket_info["gender"] = gender
-        if self.ticket_info["ticket_id"] is None and ticket_id is not None:
-            self.ticket_info["ticket_id"] = ticket_id
-            self.ticket_info["departure_date"] = self.flights_db.get_ticket(ticket_id)[
-                "departure_date"
-            ]
-            self.ticket_info["arrival_date"] = self.flights_db.get_ticket(ticket_id)[
-                "arrival_date"
-            ]
-            self.ticket_info["price"] = self.flights_db.get_ticket(ticket_id)["price"]
-            self.ticket_info["seat_place"] = self.flights_db.get_ticket(ticket_id)[
-                "seat_place"
-            ]
-        if self.ticket_info["birth_date"] is None and birth_date is not None:
-            self.ticket_info["birth_date"] = birth_date
-        if (
-            self.ticket_info["class_of_service"] is None
-            and class_of_service is not None
-        ):
-            self.ticket_info["class_of_service"] = class_of_service
-        if self.ticket_info["email"] is None and email is not None:
-            self.ticket_info["email"] = email
-        if self.ticket_info["user_name"] is None and name is not None:
-            self.ticket_info["user_name"] = name
-        if self.ticket_info["document_number"] is None and numbers is not None:
-            self.ticket_info["document_number"] = numbers
+        for field, (extractor, args) in extraction_mapping.items():
+            if self.ticket_info[field] is None:
+                value = extractor(*args)
+                if value is not None:
+                    self.ticket_info[field] = value
+
+        if self.ticket_info["ticket_id"] is not None:
+            ticket = self.flights_db.get_ticket(self.ticket_info["ticket_id"])
+            self.ticket_info.update({
+                "departure_date": ticket["departure_date"],
+                "arrival_date": ticket["arrival_date"],
+                "price": ticket["price"],
+                "seat_place": ticket["seat_place"]
+            })
 
     def add_ticket_response(self, request: str) -> Any:
         self.extract_contexts(request)
