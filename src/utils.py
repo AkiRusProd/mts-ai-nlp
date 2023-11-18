@@ -1,5 +1,4 @@
 import re
-
 from datetime import datetime
 from dateutil.parser import parse
 from bert_ner import BERTNER

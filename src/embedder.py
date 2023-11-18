@@ -1,9 +1,9 @@
-from typing import Any, List, Union
 import torch
 import os
 import numpy as np
 from transformers import AutoModel, AutoTokenizer
 from chromadb import EmbeddingFunction
+from typing import Any, List, Union
 from dotenv import dotenv_values
 
 env = dotenv_values(".env")

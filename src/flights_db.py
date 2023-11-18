@@ -1,6 +1,6 @@
-from typing import List, Optional, Union
 import pandas as pd
 import os
+from typing import List, Optional, Union
 from dotenv import dotenv_values
 
 
