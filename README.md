@@ -2,7 +2,7 @@
 NLP project for MTS AI       
 
 ## Description
-This system, designed for efficient airline ticket booking, consists of three main components: the Q4 quantized [Mistral-7B-Instruct-v0.1](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF) language model, the [ChromaDB](https://github.com/chroma-core/chroma) database system, and a user name extraction module powered by [bert-large-NER](https://huggingface.co/dslim/bert-large-NER). The language model processes and responds to user requests, while the user name extraction module, utilizing a fine-tuned BERT model, accurately identifies user names from inputs. The ChromaDB system stores and retrieves flight data, initially held in a pandas DataFrame for efficient manipulation. These components work together to automate ticket booking, providing a personalized user experience.
+This system, designed for efficient airline ticket booking, consists of three main components: the Q4 quantized [Mistral-7B-Instruct-v0.1](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF) language model, the [ChromaDB](https://github.com/chroma-core/chroma) database system, and a user name extraction module powered by [bert-large-NER](https://huggingface.co/dslim/bert-large-NER). The language model processes and responds to user requests, while the user name extraction module, utilizing a fine-tuned BERT model, accurately identifies user names from inputs. The ChromaDB system stores and retrieves user ticket data, initially held in a pandas dataframe with flights information for efficient manipulation. These components work together to automate ticket booking, providing a personalized user experience.
 
 ### Scripts:
 1. [bert_ner.py](src/bert_ner.py) - A fine-tuned BERT model for entity recognition       
