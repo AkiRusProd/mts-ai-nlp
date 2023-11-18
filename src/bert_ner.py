@@ -5,14 +5,15 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 from dotenv import dotenv_values
 from transformers import logging
+
 logging.set_verbosity_error()
 
 env = dotenv_values(".env")
-os.environ['HUGGINGFACE_HUB_CACHE'] = env['HUGGINGFACE_HUB_CACHE']
+os.environ["HUGGINGFACE_HUB_CACHE"] = env["HUGGINGFACE_HUB_CACHE"]
 
 
-class BERTNER():
-    def __init__(self, model = "dslim/bert-large-NER"):
+class BERTNER:
+    def __init__(self, model="dslim/bert-large-NER"):
         # self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.tokenizer = AutoTokenizer.from_pretrained(model)
         self.model = AutoModelForTokenClassification.from_pretrained(model)
@@ -20,6 +21,3 @@ class BERTNER():
 
     def __call__(self, text):
         return self.nlp(text)
-
-
-        

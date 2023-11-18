@@ -6,23 +6,29 @@ from llama_cpp import Llama
 from tickets_db import TicketsDB
 from flights_db import FlightsDB
 from utils import (
-    extract_email, 
-    extract_birth_date, 
-    extract_numbers, 
-    extract_gender, 
-    extract_classes_of_service, 
-    extract_city, 
-    extract_name, 
-    extract_value
+    extract_email,
+    extract_birth_date,
+    extract_numbers,
+    extract_gender,
+    extract_classes_of_service,
+    extract_city,
+    extract_name,
+    extract_value,
 )
 
 from utils import logging
 
 enable_logging = True
 
-class LlamaCPPLLM():
-    def __init__(self, model_name: Optional[str] = None, tickets_db: TicketsDB = None, flights_db: FlightsDB = None) -> None:
-        self.llama = Llama(model_path = model_name, n_ctx=2048, verbose=False)
+
+class LlamaCPPLLM:
+    def __init__(
+        self,
+        model_name: Optional[str] = None,
+        tickets_db: TicketsDB = None,
+        flights_db: FlightsDB = None,
+    ) -> None:
+        self.llama = Llama(model_path=model_name, n_ctx=2048, verbose=False)
 
         self.user = "### Instruction"
         self.assistant = "### Response"
@@ -32,7 +38,7 @@ class LlamaCPPLLM():
         self.tickets_db = tickets_db
         self.flights_db = flights_db
         self.memory_access_threshold = 1.5
-        
+
         self.db_n_results = 1
 
         self.system_contexts = {
@@ -66,53 +72,74 @@ class LlamaCPPLLM():
 
         self.current_response = None
 
-
     @property
     @logging(enable_logging, message="[Resetting ticket info]")
     def clear_ticket_info(self):
         for key in self.ticket_info.keys():
             self.ticket_info[key] = None
 
-    
     @logging(enable_logging, message="[Printing ticket info]")
-    def print_ticket_info(self, ticket_info = None):
+    def print_ticket_info(self, ticket_info=None):
         ticket_info = self.ticket_info if ticket_info is None else ticket_info
         table = PrettyTable()
-        table.field_names = [colored("Ticket Info", 'blue'), colored("Value", 'blue')]
+        table.field_names = [colored("Ticket Info", "blue"), colored("Value", "blue")]
         for key, value in ticket_info.items():
-            table.add_row([colored(key, 'green'), colored(value, "yellow" if value else "red")])
+            table.add_row(
+                [colored(key, "green"), colored(value, "yellow" if value else "red")]
+            )
         print(table)
 
     @property
     @logging(enable_logging, message="[Printing flights info]")
     def print_flights(self):
-        flights = self.flights_db.get_flights(self.ticket_info['city_name'])
+        flights = self.flights_db.get_flights(self.ticket_info["city_name"])
         table = PrettyTable()
-        table.field_names = [colored("ID", 'blue'), colored("City Name", 'blue'), colored("Departure Date", 'blue'), colored("Arrival Date", 'blue'), colored("Seat Place", 'blue'), colored("Price", 'blue')]
+        table.field_names = [
+            colored("ID", "blue"),
+            colored("City Name", "blue"),
+            colored("Departure Date", "blue"),
+            colored("Arrival Date", "blue"),
+            colored("Seat Place", "blue"),
+            colored("Price", "blue"),
+        ]
 
         for id, flight in flights.iterrows():
-            table.add_row([colored(id, 'magenta'), colored(flight['city_name'], 'green'), colored(flight['departure_date'], 'yellow'), colored(flight['arrival_date'], 'yellow'), colored(flight['seat_place'], 'cyan'), colored(flight['price'], 'red')])
+            table.add_row(
+                [
+                    colored(id, "magenta"),
+                    colored(flight["city_name"], "green"),
+                    colored(flight["departure_date"], "yellow"),
+                    colored(flight["arrival_date"], "yellow"),
+                    colored(flight["seat_place"], "cyan"),
+                    colored(flight["price"], "red"),
+                ]
+            )
 
         print(table)
 
     @property
-    @logging(enable_logging, message = "[Adding info to tickets db]")
+    @logging(enable_logging, message="[Adding info to tickets db]")
     def add_ticket_to_db(self):
-        self.tickets_db.add(str(self.ticket_info)) if all(value is not None for value in self.ticket_info.values()) else None
+        self.tickets_db.add(str(self.ticket_info)) if all(
+            value is not None for value in self.ticket_info.values()
+        ) else None
 
     def response(self, request: str, streaming: bool) -> Any:
-        return self.llama.create_completion(prompt = request, stream = streaming, stop=[f"{self.user}:"])
+        return self.llama.create_completion(
+            prompt=request, stream=streaming, stop=[f"{self.user}:"]
+        )
 
     def extract_contexts(self, request: str) -> Any:
         city_name = extract_city(request, self.flights_db.get_cities())
         gender = extract_gender(request)
         class_of_service = extract_classes_of_service(request)
         birth_date = extract_birth_date(request)
-        ticket_id = extract_value(request, self.flights_db.get_ticket_ids(self.ticket_info["city_name"]))
+        ticket_id = extract_value(
+            request, self.flights_db.get_ticket_ids(self.ticket_info["city_name"])
+        )
         email = extract_email(request)
         name = extract_name(request)
         numbers = extract_numbers(request)
-       
 
         if self.ticket_info["city_name"] is None and city_name is not None:
             self.ticket_info["city_name"] = city_name
@@ -120,13 +147,22 @@ class LlamaCPPLLM():
             self.ticket_info["gender"] = gender
         if self.ticket_info["ticket_id"] is None and ticket_id is not None:
             self.ticket_info["ticket_id"] = ticket_id
-            self.ticket_info["departure_date"] = self.flights_db.get_ticket(ticket_id)["departure_date"]
-            self.ticket_info["arrival_date"] = self.flights_db.get_ticket(ticket_id)["arrival_date"]
+            self.ticket_info["departure_date"] = self.flights_db.get_ticket(ticket_id)[
+                "departure_date"
+            ]
+            self.ticket_info["arrival_date"] = self.flights_db.get_ticket(ticket_id)[
+                "arrival_date"
+            ]
             self.ticket_info["price"] = self.flights_db.get_ticket(ticket_id)["price"]
-            self.ticket_info["seat_place"] = self.flights_db.get_ticket(ticket_id)["seat_place"]
+            self.ticket_info["seat_place"] = self.flights_db.get_ticket(ticket_id)[
+                "seat_place"
+            ]
         if self.ticket_info["birth_date"] is None and birth_date is not None:
             self.ticket_info["birth_date"] = birth_date
-        if self.ticket_info["class_of_service"] is None and class_of_service is not None:
+        if (
+            self.ticket_info["class_of_service"] is None
+            and class_of_service is not None
+        ):
             self.ticket_info["class_of_service"] = class_of_service
         if self.ticket_info["email"] is None and email is not None:
             self.ticket_info["email"] = email
@@ -135,12 +171,11 @@ class LlamaCPPLLM():
         if self.ticket_info["document_number"] is None and numbers is not None:
             self.ticket_info["document_number"] = numbers
 
-
     def add_ticket_response(self, request: str) -> Any:
         self.extract_contexts(request)
 
         self.print_ticket_info()
-        
+
         for key, value in self.ticket_info.items():
             if key in ["departure_date", "arrival_date", "seat_place", "price"]:
                 continue
@@ -149,22 +184,39 @@ class LlamaCPPLLM():
                 system_context = self.system_contexts[key]
 
                 if key == "city_name":
-                    system_context = system_context.format(cities = self.flights_db.get_cities())
+                    system_context = system_context.format(
+                        cities=self.flights_db.get_cities()
+                    )
                 elif key == "ticket_id":
                     self.print_flights
-                    system_context = system_context.format(ticket_ids = self.flights_db.get_ticket_ids(self.ticket_info['city_name']))
-            
-                return self.response(f"{system_context}\n{self.user}:\n{request}\n{self.assistant}:\n", streaming = self.streaming)
+                    system_context = system_context.format(
+                        ticket_ids=self.flights_db.get_ticket_ids(
+                            self.ticket_info["city_name"]
+                        )
+                    )
 
-        system_context = self.system_contexts["buy"].format(user_name = self.ticket_info["user_name"], departure_date = self.ticket_info["departure_date"], arrival_date = self.ticket_info["arrival_date"], seat_place = self.ticket_info["seat_place"], price = self.ticket_info["price"])
+                return self.response(
+                    f"{system_context}\n{self.user}:\n{request}\n{self.assistant}:\n",
+                    streaming=self.streaming,
+                )
+
+        system_context = self.system_contexts["buy"].format(
+            user_name=self.ticket_info["user_name"],
+            departure_date=self.ticket_info["departure_date"],
+            arrival_date=self.ticket_info["arrival_date"],
+            seat_place=self.ticket_info["seat_place"],
+            price=self.ticket_info["price"],
+        )
         self.add_ticket_to_db
         self.clear_ticket_info
         self.current_response = None
 
-        return self.response(f"{system_context}{self.user}:\n{request}\n{self.assistant}:\n", streaming = self.streaming)
+        return self.response(
+            f"{system_context}{self.user}:\n{request}\n{self.assistant}:\n",
+            streaming=self.streaming,
+        )
 
     def generate(self, request: str) -> Any:
-       
         if request.upper().startswith("BUY"):
             self.current_response = self.add_ticket_response
         elif request.upper().startswith("SHOW"):
@@ -172,14 +224,18 @@ class LlamaCPPLLM():
 
         if self.current_response is not None:
             return self.current_response(request)
-        return self.response(f"{self.system_contexts['init']}{self.user}:\n{request}\n{self.assistant}:\n", streaming = self.streaming)
-        
+        return self.response(
+            f"{self.system_contexts['init']}{self.user}:\n{request}\n{self.assistant}:\n",
+            streaming=self.streaming,
+        )
 
-    @logging(enable_logging, message = "[Querying ticket info from tickets db]")
+    @logging(enable_logging, message="[Querying ticket info from tickets db]")
     def memory_response(self, request):
-        memory_queries_data = self.tickets_db.query(request, n_results = self.db_n_results, return_text = False)
-        memory_queries = memory_queries_data['documents'][0]
-        memory_queries_distances = memory_queries_data['distances'][0]
+        memory_queries_data = self.tickets_db.query(
+            request, n_results=self.db_n_results, return_text=False
+        )
+        memory_queries = memory_queries_data["documents"][0]
+        memory_queries_distances = memory_queries_data["distances"][0]
 
         acceptable_memory_queries = []
 
@@ -192,7 +248,7 @@ class LlamaCPPLLM():
 
             queries += f"{self.assistant}:\n"
 
-            return self.response(queries, streaming = self.streaming)
+            return self.response(queries, streaming=self.streaming)
 
         for query, distance in list(zip(memory_queries, memory_queries_distances)):
             if distance < self.memory_access_threshold:
@@ -203,7 +259,9 @@ class LlamaCPPLLM():
         if len(acceptable_memory_queries) > 0:
             response = memory_response(request, acceptable_memory_queries)
         else:
-            response = self.response(f"{self.system_contexts['init']}{self.user}:\n{request}\n{self.assistant}:\n", streaming = self.streaming)
+            response = self.response(
+                f"{self.system_contexts['init']}{self.user}:\n{request}\n{self.assistant}:\n",
+                streaming=self.streaming,
+            )
 
         return response
-

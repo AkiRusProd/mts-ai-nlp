@@ -14,11 +14,11 @@ def chat() -> None:
         user_text_request = input("You > ")
 
         bot_text_response = llm_agent.generate(user_text_request)
-        
+
         if llm_agent.streaming:
-            print(f"Bot <", end = ' ')
+            print(f"Bot <", end=" ")
             for token in bot_text_response:
-                print(token['choices'][0]['text'], end = '')
+                print(token["choices"][0]["text"], end="")
             print()
         else:
             print(f"Bot < {bot_text_response['choices'][0]['text']}")
@@ -27,11 +27,11 @@ def chat() -> None:
 if __name__ == "__main__":
     embedder = HFEmbedder()
 
-    tickets_db = TicketsDB("total-memory", embedder = embedder)
+    tickets_db = TicketsDB("total-memory", embedder=embedder)
     flights_db = FlightsDB("flights.csv")
-    
-    llm_agent = LlamaCPPLLM(env['LLM_PATH'], tickets_db, flights_db)
-    llm_agent.user = "### Instructions" #"USER", ### Human
-    llm_agent.assistant = "### Response" #"ASSISTANT"
+
+    llm_agent = LlamaCPPLLM(env["LLM_PATH"], tickets_db, flights_db)
+    llm_agent.user = "### Instructions"  # "USER", ### Human
+    llm_agent.assistant = "### Response"  # "ASSISTANT"
 
     chat()
