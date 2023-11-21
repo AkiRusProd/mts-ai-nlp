@@ -7,12 +7,13 @@ This system, designed for efficient airline ticket booking, consists of three ma
 ### Scripts:
 1. [bert_ner.py](src/bert_ner.py) - A fine-tuned BERT model for entity recognition       
 2. [chat.py](src/chat.py) - Runs the chat      
-3. [embedder.py](src/embedder.py) - An embedding [sup-simcse-roberta-large](https://huggingface.co/princeton-nlp/sup-simcse-roberta-large) model to operate with text in vector db        
-4. [flights_db_filler.py](src/flights_db_filler.py) - Fills the database with synthetic data     
-5. [flights_db.py](src/flights_db.py) - A class to operate on the pandas flights dataframe       
-6. [llm.py](src/llm.py) - A class to interact with the language model        
-7. [tickets_db.py](src/tickets_db.py) - A class to operate on the ChromaDB database     
-8. [utils.py](src/utils.py) - Utility functions for features extraction from text      
+3. [embedder.py](src/embedder.py) - An embedding [sup-simcse-roberta-large](https://huggingface.co/princeton-nlp/sup-simcse-roberta-large) model to operate with text in vector db   
+4. [evaluator.py](src/evaluator.py) - Evaluates the model answer correctness
+5. [flights_db_filler.py](src/flights_db_filler.py) - Fills the database with synthetic data     
+6. [flights_db.py](src/flights_db.py) - A class to operate on the pandas flights dataframe       
+7. [llm.py](src/llm.py) - A class to interact with the language model        
+8. [tickets_db.py](src/tickets_db.py) - A class to operate on the ChromaDB database     
+9. [utils.py](src/utils.py) - Utility functions for features extraction from text      
 
 
 ### Video Demo:
