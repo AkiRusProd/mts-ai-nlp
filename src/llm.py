@@ -126,7 +126,7 @@ class LlamaCPPLLM:
 
     def response(self, request: str, streaming: bool) -> Any:
         return self.llama.create_completion(
-            prompt=request, stream=streaming, stop=[f"{self.user}:"]
+            prompt=request, stream=streaming, max_tokens=512, stop=[f"{self.user}:"]
         )
 
     def extract_contexts(self, request: str) -> Any:
